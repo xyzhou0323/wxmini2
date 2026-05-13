@@ -31,14 +31,14 @@ function auth(req, res, next) {
 
 // 保存结果
 app.post('/api/results', auth, async (req, res) => {
-  const { testType, testName, summary, resultData } = req.body;
+  const { testType, testName, summary, resultData, answers } = req.body;
   if (!testType || !testName || !summary || !resultData) {
     return res.status(400).json({ error: '缺少参数' });
   }
   try {
     const [r] = await pool.query(
-      'INSERT INTO test_results (openid, test_type, test_name, summary, result_data) VALUES (?, ?, ?, ?, ?)',
-      [req.openid, testType, testName, JSON.stringify(summary), JSON.stringify(resultData)]
+      'INSERT INTO test_results (openid, test_type, test_name, summary, result_data, answers) VALUES (?, ?, ?, ?, ?, ?)',
+      [req.openid, testType, testName, JSON.stringify(summary), JSON.stringify(resultData), answers ? JSON.stringify(answers) : null]
     );
     res.json({ id: r.insertId });
   } catch (e) {
@@ -53,7 +53,7 @@ app.get('/api/results', auth, async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 20, 50);
   try {
     const [rows] = await pool.query(
-      'SELECT id, test_type, test_name, summary, result_data, created_at FROM test_results WHERE openid = ? ORDER BY created_at DESC LIMIT ?, ?',
+      'SELECT id, test_type, test_name, summary, result_data, answers, created_at FROM test_results WHERE openid = ? ORDER BY created_at DESC LIMIT ?, ?',
       [req.openid, skip, limit]
     );
     res.json({ items: rows.map(r => ({
@@ -62,6 +62,7 @@ app.get('/api/results', auth, async (req, res) => {
       testName: r.test_name,
       summary: typeof r.summary === 'string' ? JSON.parse(r.summary) : r.summary,
       resultData: typeof r.result_data === 'string' ? JSON.parse(r.result_data) : r.result_data,
+      answers: r.answers ? (typeof r.answers === 'string' ? JSON.parse(r.answers) : r.answers) : null,
       createdAt: r.created_at
     })) });
   } catch (e) {
