@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS test_results (
   summary JSON NOT NULL,
   result_data JSON NOT NULL,
   answers JSON NULL,
+  consent TINYINT(1) NULL DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_openid_time (openid, created_at DESC)
 );

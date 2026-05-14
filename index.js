@@ -31,14 +31,14 @@ function auth(req, res, next) {
 
 // 保存结果
 app.post('/api/results', auth, async (req, res) => {
-  const { testType, testName, summary, resultData, answers } = req.body;
+  const { testType, testName, summary, resultData, answers, consent } = req.body;
   if (!testType || !testName || !summary || !resultData) {
     return res.status(400).json({ error: '缺少参数' });
   }
   try {
     const [r] = await pool.query(
-      'INSERT INTO test_results (openid, test_type, test_name, summary, result_data, answers) VALUES (?, ?, ?, ?, ?, ?)',
-      [req.openid, testType, testName, JSON.stringify(summary), JSON.stringify(resultData), answers ? JSON.stringify(answers) : null]
+      'INSERT INTO test_results (openid, test_type, test_name, summary, result_data, answers, consent) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [req.openid, testType, testName, JSON.stringify(summary), JSON.stringify(resultData), answers ? JSON.stringify(answers) : null, consent !== undefined ? (consent ? 1 : 0) : null]
     );
     res.json({ id: r.insertId });
   } catch (e) {
