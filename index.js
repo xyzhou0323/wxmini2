@@ -85,20 +85,22 @@ app.delete('/api/results/:id', auth, async (req, res) => {
 });
 
 // 批量更新同意状态
-app.patch('/api/results/consent', auth, async (req, res) => {
+function updateConsent(req, res) {
   const { consent } = req.body;
   if (consent === undefined) return res.status(400).json({ error: '缺少 consent 参数' });
-  try {
-    const [r] = await pool.query(
-      'UPDATE test_results SET consent = ? WHERE openid = ?',
-      [consent ? 1 : 0, req.openid]
-    );
+  pool.query(
+    'UPDATE test_results SET consent = ? WHERE openid = ?',
+    [consent ? 1 : 0, req.openid]
+  ).then(function(_a) {
+    var r = _a[0];
     res.json({ ok: true, updated: r.affectedRows });
-  } catch (e) {
+  }).catch(function(e) {
     console.error(e);
     res.status(500).json({ error: '更新失败' });
-  }
-});
+  });
+}
+app.post('/api/results/consent', auth, updateConsent);
+app.patch('/api/results/consent', auth, updateConsent);
 
 // 健康检查
 app.get('/api/health', (req, res) => { res.json({ ok: true }); });
