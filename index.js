@@ -84,6 +84,22 @@ app.delete('/api/results/:id', auth, async (req, res) => {
   }
 });
 
+// 批量更新同意状态
+app.patch('/api/results/consent', auth, async (req, res) => {
+  const { consent } = req.body;
+  if (consent === undefined) return res.status(400).json({ error: '缺少 consent 参数' });
+  try {
+    const [r] = await pool.query(
+      'UPDATE test_results SET consent = ? WHERE openid = ?',
+      [consent ? 1 : 0, req.openid]
+    );
+    res.json({ ok: true, updated: r.affectedRows });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: '更新失败' });
+  }
+});
+
 // 健康检查
 app.get('/api/health', (req, res) => { res.json({ ok: true }); });
 
